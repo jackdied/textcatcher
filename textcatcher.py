@@ -3,9 +3,6 @@ import re
 import weakref
 import operator
 import time
-# our imports
-import libmisc
-import nansi_re
 
 """Some basic classes that know how to read, and possibly swallow output
    Cather: a class the takes input to be acted on, listened to, or munged
@@ -89,10 +86,10 @@ class CatchQueue(object):
         ob = obref()
         ob.line(line)
       except Muffle:
-        line = libmisc.NoANSIstr('')
+        line = ''
         break
       except Filter as e:
-        line = libmisc.NoANSIstr(e.line)
+        line = e.line
         continue
       except Exception as e:
         if not self.handle_exception:
@@ -341,10 +338,7 @@ class REMatch(Catcher):
   """ a Catcher that matches a regular expression """
   def __init__(self, re_text, **opts):
     Catcher.__init__(self, **opts)
-    if opts.get('no_ansi', False):
-      self.start = self.end = nansi_re.compile(re_text)
-    else:
-      self.start = self.end = re.compile(re_text)
+    self.start = self.end = re.compile(re_text)
     self.orig_regexp = re_text
     return
 

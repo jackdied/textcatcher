@@ -1,24 +1,26 @@
-import unittest
 import itertools
+import mock
 import time
-from leanlyn import catcher
-from leanlyn import libmisc
-from leanlyn import ansi
-from leanlyn import nansi_re
+import textcatcher as catcher
+import unittest
 
-from . import helpers
+""" test the textcatcher.CatchQueue and textcatcher.Catcher interfaces """
 
-""" test the catcher.CatchQueue and catcher.Catcher interfaces """
-
-NeverMatch = libmisc.NullRE
 class AlwaysMatch(object):
     def match(self, txt):
         return True
+
+class NeverMatch(object):
+    def match(self, txt):
+        return False
+
 def nullfunc(*args): pass
+
 def make_return_x(x):
     def inner(*args):
         return x
     return inner
+
 def make_raise_x(x):
     def inner(*args):
         raise x
@@ -424,7 +426,7 @@ class TestCatcher(unittest.TestCase):
         ob.parse = nullfunc
         fake_time = itertools.count().next
 
-        with helpers.monkey(time, 'ctime', fake_time):
+        with mock.patch.object(time, 'ctime', fake_time):
             self.assertEqual(ob.history, [])
             ob.line('')
             self.assertEqual(ob.history, [0])
@@ -525,16 +527,8 @@ class TestConcreteCatchers(unittest.TestCase):
         class ParseCalled(Exception): pass
         ob.parse = make_raise_x(ParseCalled())
         ob.line('help') # nothing happens
-        blue = str(ansi.ANSIColor(fg='blue'))
-        ob.line('hell' + blue + 'o') # no match
         self.assertRaises(ParseCalled, ob.line, 'helo')
         self.assertRaises(ParseCalled, ob.line, 'helllllo')
 
-        ob = catcher.REMatch('hel+o', no_ansi=True, listen=True)
-        self.assertTrue(isinstance(ob.start, nansi_re.reProxy))
-        ob.parse = make_raise_x(ParseCalled())
-        self.assertRaises(ParseCalled, ob.line, blue + 'hello')
-        self.assertRaises(ParseCalled, ob.line, 'hell' + blue + 'o')
-
-
-cases = [TestCatchQ, TestCatcher, TestConcreteCatchers]
+if __name__ == '__main__':
+    unittest.main()
