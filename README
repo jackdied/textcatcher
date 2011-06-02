@@ -1,0 +1,42 @@
+textcatcher is a small library to help you parse and filter multiline text.
+
+the Catcher class is the matcher API.  Some concrete classes of Catcher are
+* REMatch - match a regular expression
+* LineCatcher - match a full text line
+* TextCather - match a partial text line
+
+Implementing your own Catcher class is easy.  Here's a catcher that watches
+the output of mysqldump and looks for multi-line table defintions.
+
+class SQLTable(textcatch.Catcher):
+    """ e.g.
+        CREATE TABLE `example` (
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+         PRIMARY KEY (`id`),
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+    """
+    start = re.compile('^CREATE TABLE ')
+    end = re.compile('\) ENGINE=')
+    def parse(self):
+        print "here's a full table defition!"
+	print "\n".join(self.lines)
+
+If you want to watch for multiple matches in a stream use a CatchQueue,
+a catcher-alike that dispatches to more than one catcher.  You can also
+use a queue to get fancier behavior by chaining objects together.  The
+above SQLTable catcher will print all the tables so if we follow that
+with a TextCatcher that muffles all text we get a unix filter program
+that extracts table definitions from dumps!
+
+#!/bin/env python
+import textcatcher
+import sys
+outstream = textcatcher.CatchQueue()
+outstream.add(SQLTable(listen=True))
+outstream.add(textcatcher.TextCatcher('', muffle=True))
+for text in sys.stdin:
+    text = outstream.line(line)
+    if text:
+        sys.stdout.write(text)
+
+Code origianlly from Leanlyn http://bit.ly/leanlyn
