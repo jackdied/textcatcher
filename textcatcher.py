@@ -193,7 +193,7 @@ class Catcher(object):
     else:
       self.lines.append(text)
 
-    if not filter(None, [hasattr(self, v) for (v) in ['expects', 'finished', 'end']]):
+    if not list(filter(None, [hasattr(self, v) for (v) in ['expects', 'finished', 'end']])):
       raise AttributeError("catcher has no way to finish!")
 
     done = False

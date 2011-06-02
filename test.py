@@ -424,7 +424,11 @@ class TestCatcher(unittest.TestCase):
         ob = catcher.Catcher(listen=1)
         ob.start = ob.end = AlwaysMatch()
         ob.parse = nullfunc
-        fake_time = itertools.count().next
+        try:
+            fake_time = itertools.count().next
+        except AttributeError: # py3k
+            _fake_time = itertools.count()
+            fake_time = lambda: next(_fake_time)
 
         with mock.patch.object(time, 'ctime', fake_time):
             self.assertEqual(ob.history, [])
